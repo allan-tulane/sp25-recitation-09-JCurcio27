@@ -2,6 +2,7 @@ from collections import defaultdict
 from heapq import heappush, heappop 
 from math import sqrt
 
+
 def prim(graph):
     """
     ### TODO:
@@ -9,7 +10,7 @@ def prim(graph):
     Rather than returning a single tree, return a list of trees,
     one per component, containing the MST for each component.
 
-    Each tree is a set of (weight, node1, node2) tuples.    
+    Each tree is a set of (weight, node1, node2) tuples.
     """
     def prim_helper(visited, frontier, tree):
         if len(frontier) == 0:
@@ -24,20 +25,26 @@ def prim(graph):
                 tree.add((weight, node, parent))
                 visited.add(node)
                 for neighbor, w in graph[node]:
-                    heappush(frontier, (w, neighbor, node))    
+                    heappush(frontier, (w, neighbor, node))
                     # compare with dijkstra:
-                    # heappush(frontier, (distance + weight, neighbor))                
+                    # heappush(frontier, (distance + weight, neighbor))
 
                 return prim_helper(visited, frontier, tree)
-        
-    # pick first node as source arbitrarily
-    source = list(graph.keys())[0]
-    frontier = []
-    heappush(frontier, (0, source, source))
-    visited = set()  # store the visited nodes (don't need distance anymore)
-    tree = set()
-    prim_helper(visited, frontier, tree)
-    return tree
+
+    forests = []
+    cities = set(graph.keys())
+    explored = set()
+    forests = []
+    while explored < cities:
+        frontier = []
+        tree = set()
+        source = next(iter(cities - explored))
+        heappush(frontier, (0, source, source))
+        prim_helper(explored, frontier, tree)
+        forests.append(tree)
+
+    return forests
+
 
 def test_prim():    
     graph = {
@@ -82,7 +89,27 @@ def mst_from_points(points):
       tree connecting the cities in the input.
     """
     ###TODO
-    pass
+    graph = {}
+    for point in points:
+        city_name = point[0]
+        graph[city_name] = []
+    n = len(points)
+    for i in range(n):
+        city_name1 = points[i][0]
+        for j in range(i + 1, n):
+            city_name2 = points[j][0]
+            weight = euclidean_distance(points[i], points[j])
+            graph[city_name1].append((city_name2, weight))
+            graph[city_name2].append((city_name1, weight))
+    edges = list(prim(graph)[0])
+
+    def key(edge):
+        return (edge[0], edge[1], edge[2])
+
+    edges.sort(key=key)
+
+    return edges
+
 
 def euclidean_distance(p1, p2):
     return sqrt((p1[1] - p2[1])**2 + (p1[2] - p2[2])**2)
